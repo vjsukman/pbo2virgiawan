@@ -1,63 +1,46 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { Matakuliah } from './entities/matakuliah.entity';
 import { CreateMatakuliahDto } from './dto/create-matakuliah.dto';
 import { UpdateMatakuliahDto } from './dto/update-matakuliah.dto';
 
 @Injectable()
 export class MatakuliahService {
-  private data: Matakuliah[] = [];
+  constructor(
+    @InjectRepository(Matakuliah)
+    private readonly repo: Repository<Matakuliah>,
+  ) {}
 
-  create(createMatakuliahDto: CreateMatakuliahDto): Matakuliah {
-    const newMatakuliah = new Matakuliah(
-      createMatakuliahDto.kode,
-      createMatakuliahDto.nama,
-      createMatakuliahDto.sks,
-      createMatakuliahDto.semester,
-      createMatakuliahDto.jurusan,
-    );
-    this.data.push(newMatakuliah);
-    return newMatakuliah;
+  findAll(): Promise<Matakuliah[]> {
+    return this.repo.find();
   }
 
-  findAll(): Matakuliah[] {
-    return this.data;
-  }
-
-  findOne(kode: string): Matakuliah | undefined {
-    return this.data.find((m) => m.kode === kode);
-  }
-
-  update(
-    kode: string,
-    updateMatakuliahDto: UpdateMatakuliahDto,
-  ): Matakuliah | null {
-    if (
-      !updateMatakuliahDto.kode ||
-      !updateMatakuliahDto.nama ||
-      !updateMatakuliahDto.sks ||
-      !updateMatakuliahDto.semester ||
-      !updateMatakuliahDto.jurusan
-    ) {
-      throw new Error('Semua field wajib diisi untuk update');
+  async findOne(id: number): Promise<Matakuliah> {
+    const data = await this.repo.findOneBy({ id });
+    if (!data) {
+      throw new NotFoundException(`Matakuliah dengan ID ${id} tidak ditemukan`);
     }
-    const index = this.data.findIndex((m) => m.kode === kode);
-    if (index === -1) return null;
-    const updated = new Matakuliah(
-      updateMatakuliahDto.kode,
-      updateMatakuliahDto.nama,
-      updateMatakuliahDto.sks,
-      updateMatakuliahDto.semester,
-      updateMatakuliahDto.jurusan,
-    );
-    this.data[index] = updated;
-    return updated;
+    return data;
   }
 
-  remove(kode: string): Matakuliah | null {
-    const index = this.data.findIndex((m) => m.kode === kode);
-    if (index === -1) return null;
-    const deleted = this.data[index];
-    this.data.splice(index, 1);
-    return deleted;
+  async create(dto: CreateMatakuliahDto): Promise<Matakuliah> {
+    const mhs = this.repo.create(dto);
+    return this.repo.save(mhs);
+  }
+
+  async update(id: number, dto: UpdateMatakuliahDto): Promise<Matakuliah> {
+    const existing = await this.repo.findOneBy({ id });
+    if (!existing) throw new NotFoundException('Matakuliah tidak ditemukan');
+
+    const updated = this.repo.merge(existing, dto);
+    return this.repo.save(updated);
+  }
+
+  async remove(id: number): Promise<void> {
+    const result = await this.repo.delete(id);
+    if (result.affected === 0) {
+      throw new NotFoundException('Matakuliah tidak ditemukan');
+    }
   }
 }

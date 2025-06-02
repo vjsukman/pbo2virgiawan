@@ -4,10 +4,8 @@ import {
   Post,
   Body,
   Param,
-  Delete,
-  NotFoundException,
-  BadRequestException,
   Put,
+  Delete,
 } from '@nestjs/common';
 import { MatakuliahService } from './matakuliah.service';
 import { CreateMatakuliahDto } from './dto/create-matakuliah.dto';
@@ -15,58 +13,30 @@ import { UpdateMatakuliahDto } from './dto/update-matakuliah.dto';
 
 @Controller('matakuliah')
 export class MatakuliahController {
-  constructor(private readonly matakuliahService: MatakuliahService) {}
-
-  @Post()
-  create(@Body() createMatakuliahDto: CreateMatakuliahDto) {
-    return this.matakuliahService.create(createMatakuliahDto);
-  }
+  constructor(private readonly service: MatakuliahService) {}
 
   @Get()
   findAll() {
-    return this.matakuliahService.findAll();
+    return this.service.findAll();
   }
 
-  @Get(':kode')
-  findOne(@Param('kode') kode: string) {
-    const matkul = this.matakuliahService.findOne(kode);
-    if (!matkul) {
-      throw new NotFoundException(
-        `Matakuliah dengan kode ${kode} tidak ditemukan`,
-      );
-    }
-    return matkul;
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.service.findOne(+id);
   }
 
-  @Put(':kode')
-  update(
-    @Param('kode') kode: string,
-    @Body() updateMatakuliahDto: UpdateMatakuliahDto,
-  ) {
-    try {
-      const updated = this.matakuliahService.update(kode, updateMatakuliahDto);
-      if (!updated) {
-        throw new NotFoundException(
-          `Matakuliah dengan kode ${kode} tidak ditemukan`,
-        );
-      }
-      return updated;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new BadRequestException(error.message);
-      }
-      throw new BadRequestException('Terjadi kesalahan tak dikenal');
-    }
+  @Post()
+  create(@Body() dto: CreateMatakuliahDto) {
+    return this.service.create(dto);
   }
 
-  @Delete(':kode')
-  remove(@Param('kode') kode: string) {
-    const deleted = this.matakuliahService.remove(kode);
-    if (!deleted) {
-      throw new NotFoundException(
-        `Matakuliah dengan kode ${kode} tidak ditemukan`,
-      );
-    }
-    return deleted;
+  @Put(':id')
+  update(@Param('id') id: string, @Body() dto: UpdateMatakuliahDto) {
+    return this.service.update(+id, dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.service.remove(+id);
   }
 }

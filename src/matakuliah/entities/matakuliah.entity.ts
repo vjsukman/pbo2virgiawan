@@ -1,12 +1,22 @@
+import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm';
+
+@Entity()
 export class Matakuliah {
-  constructor(
-    public kode: string,
-    public nama: string,
-    public sks: number,
-    public semester: string,
-    public jurusan: string,
-  ) {}
-  getDisplayName(): string {
-    return `${this.nama} (${this.kode})`;
-  }
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({ unique: true })
+  kode: string;
+
+  @Column()
+  nama: string;
+
+  @Column()
+  sks: number;
+
+  @Column()
+  semester: string;
+
+  @Column()
+  jurusan: string;
 }
