@@ -1,4 +1,4 @@
-version: "3.8" # Versi Docker Compose file, gunakan versi terbaru yang stabil
+version: '3.8' # Versi Docker Compose file, gunakan versi terbaru yang stabil
 
 services:
   db: # Nama service untuk MySQL
@@ -11,7 +11,7 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
-      - "3306:3306" # Mapping port host 3306 ke port 3306 di container
+      - '3306:3306' # Mapping port host 3306 ke port 3306 di container
     volumes:
       - mysql_data:/var/lib/mysql # Simpan data MySQL ke volume agar tidak hilang saat container dihentikan
 
@@ -20,13 +20,35 @@ services:
     container_name: be_siakad_phpmyadmin # Nama container
     restart: always
     ports:
-      - "8080:80" # phpMyAdmin bisa diakses melalui http://localhost:8080
+      - '8080:80' # phpMyAdmin bisa diakses melalui http://localhost:8080
     environment:
       PMA_HOST: db
       PMA_USER: ${MYSQL_USER}
       PMA_PASSWORD: ${MYSQL_PASSWORD}
     depends_on:
       - db # Pastikan service db (MySQL) dijalankan lebih dulu
+
+  be-siakad:
+    build:
+      context: ../../
+      dockerfile: misc/docker/Dockerfile.dev
+    container_name: be_siakad_backend
+    restart: always
+    env_file:
+      - ../../.env
+    depends_on:
+      - db
+    ports:
+      - '3000:3000'
+    volumes:
+      - ../../:/app # <<=== ini akan me-mount kode Anda ke container
+      - /app/node_modules # Hindari konflik modul antara host dan container
+    environment:
+      DATABASE_HOST: db
+      DATABASE_PORT: 3306
+      DATABASE_USERNAME: ${MYSQL_USER}
+      DATABASE_PASSWORD: ${MYSQL_PASSWORD}
+      DATABASE_NAME: ${MYSQL_DATABASE}
 
 volumes:
   mysql_data: # Volume untuk menyimpan data MySQL secara persisten
